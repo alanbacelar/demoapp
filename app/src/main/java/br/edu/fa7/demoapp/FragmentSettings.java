@@ -1,7 +1,11 @@
 package br.edu.fa7.demoapp;
 
+import android.app.Service;
+import android.content.ComponentName;
 import android.content.Intent;
+import android.content.ServiceConnection;
 import android.os.Bundle;
+import android.os.IBinder;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
@@ -24,6 +28,8 @@ public class FragmentSettings extends Fragment implements View.OnClickListener {
     private Button mStartedService;
     private Button mStartBoundedService;
     private Button mStopBoundedService;
+    private BoundedService mBoundedService;
+    private boolean mIsServiceBounded;
 
     @Nullable
     @Override
@@ -52,6 +58,7 @@ public class FragmentSettings extends Fragment implements View.OnClickListener {
 
     @Override
     public void onClick(View view) {
+
         switch (view.getId()) {
             case R.id.settings_started_service:
                 Intent it = new Intent(getActivity(), StartedService.class);
@@ -60,10 +67,46 @@ public class FragmentSettings extends Fragment implements View.OnClickListener {
                 break;
 
             case R.id.settings_bounded_service_start:
+                if (mIsServiceBounded) {
+                    mBoundedService.start();
+                }
+
                 break;
 
             case R.id.settings_bounded_service_stop:
+                if (mIsServiceBounded) {
+                    mBoundedService.stop();
+                }
+
                 break;
         }
     }
+
+    @Override
+    public void onStart() {
+        super.onStart();
+
+        Intent it = new Intent(getActivity(), BoundedService.class);
+        getActivity().bindService(it, mServiceConnection, Service.BIND_AUTO_CREATE);
+    }
+
+    @Override
+    public void onStop() {
+        super.onStop();
+        getActivity().unbindService(mServiceConnection);
+    }
+
+    private ServiceConnection mServiceConnection = new ServiceConnection() {
+        @Override
+        public void onServiceConnected(ComponentName componentName, IBinder iBinder) {
+            BoundedService.LocalIBinder binder = (BoundedService.LocalIBinder) iBinder;
+            mBoundedService = binder.getService();
+            mIsServiceBounded = true;
+        }
+
+        @Override
+        public void onServiceDisconnected(ComponentName componentName) {
+            mIsServiceBounded = false;
+        }
+    };
 }

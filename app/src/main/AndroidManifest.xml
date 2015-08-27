@@ -18,6 +18,7 @@
         </activity>
 
         <service android:name=".StartedService" />
+        <service android:name=".BoundedService" />
     </application>
 
 </manifest>
